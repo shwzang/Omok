@@ -1,14 +1,15 @@
-ï»¿#include "Omok.h"
+#include "Omok.h"
 
 using namespace std;
 
 class Omok;
+class Player;
 
 int main()
 {
 	Omok* GameInstance = new Omok();
 
-	GameInstance->Init(); //ì´ˆê¸°í™”
+	GameInstance->Init(); //ÃÊ±âÈ­
 	GameInstance->Play();
 	GameInstance->Move();
 }
@@ -20,20 +21,24 @@ void Omok::Init()
 	{
 		for(int j = 1; j <= N; j++)
 		{
-			DrawBoard(i, j);			// ë°”ë‘‘íŒ ê·¸ë¦¬ê¸°
-			Map[i][j] = 0;			// ë°”ë‘‘íŒ ì´ˆê¸°í™”
+			DrawBoard(i, j);			// ¹ÙµÏÆÇ ±×¸®±â
+			Map[i][j] = 0;			// ¹ÙµÏÆÇ ÃÊ±âÈ­
 		}
 	}
 	for(int i = 0; i < N * N; i++)
-	{	// ê¸°ë³´ ì´ˆê¸°í™”
+	{	// ±âº¸ ÃÊ±âÈ­
 		Gibo[i][0] = 0;
 		Gibo[i][1] = 0;
 	}
-	Player[0] = 0;
-	Player[1] = 0;
 
-	Display(); //ì „ê´‘íŒ ê·¸ë¦¬ê¸°
-	SelectPlayer(); // 1p, 2p ì‚¬ìš©ì ë˜ëŠ” ì»´í“¨í„° ì„ íƒ
+	PlayerList[0] = new Player(false);
+	PlayerList[1] = new Player(false);
+
+	//intPlayer[0] = 0;
+	//intPlayer[1] = 0;
+
+	Display(); //Àü±¤ÆÇ ±×¸®±â
+	SelectPlayer(); // 1p, 2p »ç¿ëÀÚ ¶Ç´Â ÄÄÇ»ÅÍ ¼±ÅÃ
 
 	CursorX = N / 2;
 	CursorY = N / 2;
@@ -49,11 +54,13 @@ void Omok::Play()
 	{
 		int tmp = 0;
 		Display();
-		if(Player[((Count - 1) % 2) + 1] == 0)
+		if(PlayerList[(Count - 1) % 2]->IsComputer == false)
+			//if(intPlayer[((Count - 1) % 2) + 1] == 0)
 		{
 			Move();
-		} // í”Œë ˆì´ì–´ê°€ ìœ ì €ë©´ ëŒ ì˜®ê¸°ê¸°
-		else if(Player[((Count - 1) % 2) + 1] == 1)
+		} // ÇÃ·¹ÀÌ¾î°¡ À¯Àú¸é µ¹ ¿Å±â±â
+		else if(PlayerList[(Count - 1) % 2]->IsComputer == true)
+			//else if(intPlayer[((Count - 1) % 2) + 1] == 1)
 		{
 			Timer();
 			if(Count >= 3)	tmp = ABSearch();
@@ -61,8 +68,8 @@ void Omok::Play()
 			CursorY = tmp % 100;
 			OneTwo();
 			DrawStone(CursorX, CursorY);
-		} // í”Œë ˆì´ì–´ê°€ ì»´í“¨í„°ë©´ ê³„ì‚°í•˜ê¸°
-		if(Winner == 0) Winner = CheckWinner((Count % 2) + 1);
+		} // ÇÃ·¹ÀÌ¾î°¡ ÄÄÇ»ÅÍ¸é °è»êÇÏ±â
+		if(Winner == 0) Winner = CheckWinner(Count % 2);
 
 		GoToXY(N + 1, N + 5);
 		cout << Count;
@@ -74,21 +81,21 @@ void Omok::DrawBoard(int x, int y)
 {
 	if(x == 1)
 	{
-		if(y == 1) cout << setw(2) << "â”Œ ";
-		else if(y != N) cout << setw(2) << "â”¬ ";
-		else if(y == N) cout << setw(2) << "â” " << endl;
+		if(y == 1) cout << setw(2) << "¦£ ";
+		else if(y != N) cout << setw(2) << "¦¨ ";
+		else if(y == N) cout << setw(2) << "¦¤ " << endl;
 	}
 	else if(x == N)
 	{
-		if(y == 1) cout << setw(2) << "â”” ";
-		else if(y != N) cout << setw(2) << "â”´ ";
-		else if(y == N) cout << setw(2) << "â”˜ " << endl;
+		if(y == 1) cout << setw(2) << "¦¦ ";
+		else if(y != N) cout << setw(2) << "¦ª ";
+		else if(y == N) cout << setw(2) << "¦¥ " << endl;
 	}
 	else if(x != N)
 	{
-		if(y == 1) cout << setw(2) << "â”œ ";
-		else if(y != N) cout << setw(2) << "â”¼ ";
-		else if(y == N) cout << setw(2) << "â”¤ " << endl;
+		if(y == 1) cout << setw(2) << "¦§ ";
+		else if(y != N) cout << setw(2) << "¦« ";
+		else if(y == N) cout << setw(2) << "¦© " << endl;
 	}
 }
 
@@ -104,7 +111,7 @@ void Omok::Move()
 		a = _getch();
 		Timer();
 
-		if(a == 224)  // ì…ë ¥ì´ ë°©í–¥í‚¤ ë©´
+		if(a == 224)  // ÀÔ·ÂÀÌ ¹æÇâÅ° ¸é
 		{
 			a = _getch();
 			if((a == 72) && (CursorY > 0))
@@ -124,7 +131,7 @@ void Omok::Move()
 				CursorX++;
 			}
 		}
-		else if(((a == 119) || (a == 87)) && (CursorY > 0))// ì…ë ¥ì´ wasd ë©´
+		else if(((a == 119) || (a == 87)) && (CursorY > 0))// ÀÔ·ÂÀÌ wasd ¸é
 		{
 			CursorY--;
 		}
@@ -142,10 +149,10 @@ void Omok::Move()
 		}
 
 		if((a == 32) || (a == 13))
-		{   // ì…ë ¥ì´ ìŠ¤í˜ì´ìŠ¤ë°” ë˜ëŠ” ì—”í„°ë©´
+		{   // ÀÔ·ÂÀÌ ½ºÆäÀÌ½º¹Ù ¶Ç´Â ¿£ÅÍ¸é
 			GoToXY(CursorX * 2, CursorY);
 			OneTwo();
-			DrawStone(CursorX, CursorY); // ëŒ ë†“ê¸°
+			DrawStone(CursorX, CursorY); // µ¹ ³õ±â
 		}
 		GoToXY(CursorX * 2, CursorY);
 	} while((c == Count) && (Winner == 0));
@@ -156,12 +163,12 @@ void Omok::GoToXY(int x, int y)
 	Cur.X = x;
 	Cur.Y = y;
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Cur);
-} // ì»¤ì„œ ì´ë™
+} // Ä¿¼­ ÀÌµ¿
 void Omok::DrawStone(int x, int y)
 {
 	if(Map[x][y] == 0)
 	{
-		cout << ((Count % 2) ? "â—‹" : "â—");
+		cout << ((Count % 2) ? "¡Û" : "¡Ü");
 		Map[x][y] = (Count % 2) ? 1 : -1;
 		Gibo[Count][0] = x;
 		Gibo[Count][1] = y;
@@ -207,22 +214,22 @@ void Omok::Display()
 	GoToXY(N * 3 / 5, N + 1);
 	cout << (Count % 2 ? "Black" : "White") << "\'s Turn";
 	GoToXY(2 * N + 2, N / 4);
-	cout << "Blackâ—‹";
+	cout << "Black¡Û";
 
 	GoToXY(2 * N + 2, N / 2);
 	cout << "vs";
 	GoToXY(2 * N + 2, N * 3 / 4);
-	cout << "Whiteâ—";
+	cout << "White¡Ü";
 
+	ShowPlayer(0);
 	ShowPlayer(1);
-	ShowPlayer(2);
 }
 void Omok::SelectPlayer()
 {
-	Player[1] = 0;
-	Player[2] = 0;
+	//intPlayer[1] = 0;
+	//intPlayer[2] = 0;
 
-	for(char i = 1; i <= 2; i++)
+	for(char i = 0; i < 2; i++)
 	{
 		int user = 0;
 		int sel = 0;
@@ -233,60 +240,55 @@ void Omok::SelectPlayer()
 
 			a = _getch();
 
-			if(a == 224)  // ì…ë ¥ì´ ë°©í–¥í‚¤ ë©´
+			if(a == 224)  // ÀÔ·ÂÀÌ ¹æÇâÅ° ¸é
 			{
 				a = _getch();
 				if((a == 75) || (a == 77))
 				{
-					Player[i] = (Player[i] + 1) % 2;
+					//intPlayer[i] = (intPlayer[i] + 1) % 2;
+					PlayerList[i]->IsComputer = !PlayerList[i]->IsComputer;
 					ShowPlayer(i);
 				}
 			}
 
 			else if(((a == 97) || (a == 65)) || ((a == 100) || (a == 69)))
 			{
-				Player[i] = (Player[i] + 1) % 2;
+				//intPlayer[i] = (intPlayer[i] + 1) % 2;
+				PlayerList[i]->IsComputer = !PlayerList[i]->IsComputer;
 				ShowPlayer(i);
-			} // ì…ë ¥ì´ ad ë©´
+			} // ÀÔ·ÂÀÌ ad ¸é
 
 			if((a == 32) || (a == 13))
-			{   // ì…ë ¥ì´ ìŠ¤í˜ì´ìŠ¤ë°” ë˜ëŠ” ì—”í„°ë©´
+			{   // ÀÔ·ÂÀÌ ½ºÆäÀÌ½º¹Ù ¶Ç´Â ¿£ÅÍ¸é
 				sel = 1;
 			}
 		} while(sel == 0);
 	}
-} // í”Œë ˆì´ì–´ ì„ íƒí•˜ê¸°
+} // ÇÃ·¹ÀÌ¾î ¼±ÅÃÇÏ±â
 void Omok::ShowPlayer(int num)
 {
-	if(num == 1)
+	if(num == 0)
 	{
 		GoToXY(2 * N + 2, N / 4 + 1);
-		if(Player[num] == 0)
-		{
-			cout.width(5);
-			cout << "User";
-		}
-		else if(Player[num] == 1)
-		{
-			cout.width(5);
-			cout << "Com";
-		}
 	}
-	else if(num == 2)
+	else if(num == 1)
 	{
 		GoToXY(2 * N + 2, N * 3 / 4 + 1);
-		if(Player[num] == 0)
-		{
-			cout.width(5);
-			cout << "User";
-		}
-		else if(Player[num] == 1)
-		{
-			cout.width(5);
-			cout << "Com";
-		}
 	}
-} // í”Œë ˆì´ì–´ ë³´ì—¬ì£¼ê¸°
+
+	if(PlayerList[num]->IsComputer == false)
+		//if(intPlayer[num] == 0)
+	{
+		cout.width(5);
+		cout << "User";
+	}
+	if(PlayerList[num]->IsComputer == true)
+		//else if(intPlayer[num] == 1)
+	{
+		cout.width(5);
+		cout << "Com";
+	}
+} // ÇÃ·¹ÀÌ¾î º¸¿©ÁÖ±â
 
 int Omok::CheckWinner(int player)
 {
@@ -294,7 +296,7 @@ int Omok::CheckWinner(int player)
 	int vec[4][2] = { {1, 0}, {0, 1}, {1, 1}, {-1, 1} };
 	for(int i = 0; i <= Count; i++)
 	{
-		if(player == ((Count % 2) + 1))
+		if(player == (Count % 2))
 		{
 			for(int j = 0; j < 4; j++)
 			{
@@ -319,17 +321,10 @@ int Omok::CheckWinner(int player)
 }
 void Omok::FinishGame()
 {
-	if(Winner >= 10)
+	if(Winner >= 10 || Winner <= -10)
 	{
 		GoToXY(N + 2, N);
-		cout << "player" << 1 << " win\a";
-		Sleep(2000);
-		GoToXY(CursorX * 2, CursorY);
-	}
-	else if(Winner <= -10)
-	{
-		GoToXY(N + 2, N);
-		cout << "player" << 2 << " win\a";
+		cout << "player" << (Winner < 0 ? 1 : 2) << " win\a";
 		Sleep(2000);
 		GoToXY(CursorX * 2, CursorY);
 	}
@@ -341,14 +336,14 @@ int Omok::Evaluate()
 
 	char x, y;
 	for(int i = 1; i <= Count; i++)
-	{ // ëª¨ë“  ìˆ˜
+	{ // ¸ğµç ¼ö
 		int onestone = 0;
 		for(char j = 0; j < 4; j++)
-		{ // 4ë°©í–¥
+		{ // 4¹æÇâ
 			for(char k = 5; k >= 2; k--)
 			{ // 4,3,2,1,0
-				OppositeStoneNumber = 0;  //ë‹¤ë¥¸ ìƒ‰ ëŒ ìˆ˜
-				EmptyStoneNumber = 0;    //ë¹ˆ ëŒ ìˆ˜
+				OppositeStoneNumber = 0;  //´Ù¸¥ »ö µ¹ ¼ö
+				EmptyStoneNumber = 0;    //ºó µ¹ ¼ö
 				char sum = 0;
 				int mid = 0;
 				int read = 0;
@@ -567,7 +562,7 @@ void Omok::Timer()
 		}
 		else if(Count % 2 == 0)
 		{
-			Winner = -1000;
+			Winner = +1000;
 		}
 	}
 }

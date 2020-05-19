@@ -1,16 +1,20 @@
 #pragma once
 
+#include<conio.h>
 #include<iostream>
 #include<iomanip>
 #include<list>
+#include<math.h>
+#include<stdio.h>
+#include<stdlib.h>
 #include<string>
-#include<conio.h>
 #include<time.h>
 #include<Windows.h>
+#include "Player.h"
 #include "Node.h"
 
 #define N 19
-#define TIMELIMIT (CLOCKS_PER_SEC * 50)  // 시간 제한
+#define TIMELIMIT (CLOCKS_PER_SEC * 10)  // 시간 제한
 #define NODELIMIT 3 // 노드 제한
 
 class Omok
@@ -32,7 +36,8 @@ public:
 
 	clock_t StartTime, EndTime, SearchEndTime;
 
-	int Player[3];  // 플레이어 user or com
+	int intPlayer[3];  // 플레이어 user or com
+	Player* PlayerList[2];
 
 public:
 	void OneTwo();
