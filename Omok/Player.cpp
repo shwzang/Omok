@@ -1,11 +1,11 @@
 #include "Player.h"
 
 Player::Player()
-	:IsComputer(false)
+	:IsComputer( false )
 {
 }
 
-Player::Player(bool IsComputer)
+Player::Player( bool IsComputer )
 	: Player()
 {
 	this->IsComputer = IsComputer;
