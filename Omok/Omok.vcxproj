@@ -147,18 +147,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Board.cpp" />
-    <ClCompile Include="Node.cpp" />
-    <ClCompile Include="Omok.cpp" />
-    <ClCompile Include="Player.cpp" />
-    <ClCompile Include="Util.cpp" />
+    <ClCompile Include="board.cpp" />
+    <ClCompile Include="node.cpp" />
+    <ClCompile Include="omok.cpp" />
+    <ClCompile Include="player.cpp" />
+    <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Board.h" />
-    <ClInclude Include="Node.h" />
-    <ClInclude Include="Omok.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="Util.h" />
+    <ClInclude Include="board.h" />
+    <ClInclude Include="node.h" />
+    <ClInclude Include="omok.h" />
+    <ClInclude Include="player.h" />
+    <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
