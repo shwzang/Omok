@@ -33,23 +33,20 @@ void omok::init()
 		game_board->init_board();
 	}
 
-	for (int i = 0; i < N * N; i++)
-	{
-		// 기보 초기화
-		gibo[i][0] = 0;
-		gibo[i][1] = 0;
-	}
-
 	player_list[0] = new player(false);
 	player_list[1] = new player(false);
 
-	cursor_x = N / 2;
-	cursor_y = N / 2;
+	cursor_x = BOARD_SIZE / 2;
+	cursor_y = BOARD_SIZE / 2;
 
 	count = 1;
 
-	display(); //전광판 그리기
-	select_player(); // 1p, 2p 사용자 또는 컴퓨터 선택
+	//전광판 그리기
+	display();
+
+	// 1p, 2p 사용자 또는 컴퓨터 선택
+	select_player_is_user(0);
+	select_player_is_user(1);
 
 	go_to_xy(cursor_x * 2, cursor_y);
 }
@@ -84,7 +81,7 @@ void omok::play()
 			winner = check_winner(count % 2);
 		}
 
-		go_to_xy(N + 1, N + 5);
+		go_to_xy(BOARD_SIZE + 1, BOARD_SIZE + 5);
 		cout << count;
 		go_to_xy(cursor_x * 2, cursor_y);
 	} while (winner == 0);
@@ -99,48 +96,58 @@ void omok::move()
 	do
 	{
 		timer();
-		int a = _getch();
+		int input_key = _getch();
 		timer();
 
-		if (a == 224) // 입력이 방향키 면
+		// 입력이 방향키인 경우
+		if (input_key == 224)
 		{
-			a = _getch();
-			if ((a == 72) && (cursor_y > 0))
+			input_key = _getch();
+
+			// 방향키 위키 입력
+			if ((input_key == 72) && (cursor_y > 0))
 			{
 				cursor_y--;
 			}
-			else if ((a == 80) && (cursor_y < N - 1))
+				// 방향키 아래키 입력
+			else if ((input_key == 80) && (cursor_y < BOARD_SIZE - 1))
 			{
 				cursor_y++;
 			}
-			else if ((a == 75) && (cursor_x > 0))
+				// 방향키 왼쪽키 입력
+			else if ((input_key == 75) && (cursor_x > 0))
 			{
 				cursor_x--;
 			}
-			else if ((a == 77) && (cursor_x < N - 1))
+				// 방향키 오른쪽키 입력
+			else if ((input_key == 77) && (cursor_x < BOARD_SIZE - 1))
 			{
 				cursor_x++;
 			}
 		}
-		else if (((a == 119) || (a == 87)) && (cursor_y > 0)) // 입력이 wasd 면
+			// w 키 입력
+		else if (((input_key == 119) || (input_key == 87)) && (cursor_y > 0)) // 입력이 wasd 면
 		{
 			cursor_y--;
 		}
-		else if (((a == 115) || (a == 83)) && (cursor_y < N - 1))
+			// s 키 입력
+		else if (((input_key == 115) || (input_key == 83)) && (cursor_y < BOARD_SIZE - 1))
 		{
 			cursor_y++;
 		}
-		else if (((a == 97) || (a == 65)) && (cursor_x > 0))
+			// a 키 입력
+		else if (((input_key == 97) || (input_key == 65)) && (cursor_x > 0))
 		{
 			cursor_x--;
 		}
-		else if (((a == 100) || (a == 69)) && (cursor_x < N - 1))
+			// b 키 입력
+		else if (((input_key == 100) || (input_key == 69)) && (cursor_x < BOARD_SIZE - 1))
 		{
 			cursor_x++;
 		}
 
 		// 입력이 스페이스바 또는 엔터면
-		if ((a == 32) || (a == 13))
+		if ((input_key == 32) || (input_key == 13))
 		{
 			go_to_xy(cursor_x * 2, cursor_y);
 			one_two();
@@ -166,34 +173,66 @@ void omok::draw_stone(int x, int y)
 	}
 	else
 	{
-		go_to_xy(N, N);
+		go_to_xy(BOARD_SIZE, BOARD_SIZE);
 		cout << "Already Laid\a";
 		Sleep(2000);
-		go_to_xy(N, N);
+		go_to_xy(BOARD_SIZE, BOARD_SIZE);
 		cout << "            ";
 		go_to_xy(cursor_x * 2, cursor_y);
 	}
+}
+
+void omok::select_player_is_user(int player_num)
+{
+	bool has_selected = false;
+	show_player(player_num);
+	do
+	{
+		int a = _getch();
+
+		if (a == 224) // 입력이 방향키 면
+		{
+			a = _getch();
+			if ((a == 75) || (a == 77))
+			{
+				player_list[player_num]->is_computer = !player_list[player_num]->is_computer;
+				show_player(player_num);
+			}
+		}
+
+		else if (((a == 97) || (a == 65)) || ((a == 100) || (a == 69)))
+		{
+			player_list[player_num]->is_computer = !player_list[player_num]->is_computer;
+			show_player(player_num);
+		} // 입력이 ad 면
+
+		if ((a == 32) || (a == 13))
+		{
+			// 입력이 스페이스바 또는 엔터면
+			has_selected = true;
+		}
+	} while (has_selected == false);
 }
 
 void omok::one_two()
 {
 	if (count == 1)
 	{
-		cursor_x = N / 2;
-		cursor_y = N / 2;
+		cursor_x = BOARD_SIZE / 2;
+		cursor_y = BOARD_SIZE / 2;
 	}
 	else if (count == 2)
 	{
 		if ((cursor_x > 10) || (cursor_x < 8) || (cursor_x > 10) || (cursor_x < 8))
 		{
-			cursor_x = N / 2;
-			cursor_y = N / 2;
-			srand((unsigned)time(NULL));
+			cursor_x = BOARD_SIZE / 2;
+			cursor_y = BOARD_SIZE / 2;
+			srand(static_cast<unsigned>(time(nullptr)));
 			do
 			{
 				cursor_x = cursor_x + rand() % 3 - 1;
 				cursor_y = cursor_y + rand() % 3 - 1;
-			} while ((cursor_x == N / 2) && (cursor_y == N / 2));
+			} while ((cursor_x == BOARD_SIZE / 2) && (cursor_y == BOARD_SIZE / 2));
 		}
 	}
 	go_to_xy(cursor_x * 2, cursor_y);
@@ -201,71 +240,37 @@ void omok::one_two()
 
 void omok::display()
 {
-	go_to_xy(N * 3 / 5, N + 1);
+	go_to_xy(BOARD_SIZE * 3 / 5, BOARD_SIZE + 1);
 	cout << (count % 2 ? "Black" : "White") << "\'s Turn";
-	go_to_xy(2 * N + 2, N / 4);
+	go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE / 4);
 	cout << "Black○";
 
-	go_to_xy(2 * N + 2, N / 2);
+	go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE / 2);
 	cout << "vs";
-	go_to_xy(2 * N + 2, N * 3 / 4);
+	go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE * 3 / 4);
 	cout << "White●";
 
 	show_player(0);
 	show_player(1);
 }
 
-void omok::select_player()
+void omok::show_player(int player_num)
 {
-	for (int i = 0; i < 2; i++)
+	if (player_num == 0)
 	{
-		int sel = 0;
-		show_player(i);
-		do
-		{
-			int a = _getch();
-
-			if (a == 224) // 입력이 방향키 면
-			{
-				a = _getch();
-				if ((a == 75) || (a == 77))
-				{
-					player_list[i]->is_computer = !player_list[i]->is_computer;
-					show_player(i);
-				}
-			}
-
-			else if (((a == 97) || (a == 65)) || ((a == 100) || (a == 69)))
-			{
-				player_list[i]->is_computer = !player_list[i]->is_computer;
-				show_player(i);
-			} // 입력이 ad 면
-
-			if ((a == 32) || (a == 13))
-			{
-				// 입력이 스페이스바 또는 엔터면
-				sel = 1;
-			}
-		} while (sel == 0);
+		go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE / 4 + 1);
 	}
-} // 플레이어 선택하기
-void omok::show_player(int num)
-{
-	if (num == 0)
+	else if (player_num == 1)
 	{
-		go_to_xy(2 * N + 2, N / 4 + 1);
-	}
-	else if (num == 1)
-	{
-		go_to_xy(2 * N + 2, N * 3 / 4 + 1);
+		go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE * 3 / 4 + 1);
 	}
 
-	if (player_list[num]->is_computer == false)
+	if (player_list[player_num]->is_computer == false)
 	{
 		cout.width(5);
 		cout << "User";
 	}
-	else if (player_list[num]->is_computer == true)
+	else if (player_list[player_num]->is_computer == true)
 	{
 		cout.width(5);
 		cout << "Com";
@@ -306,7 +311,7 @@ void omok::finish_game()
 {
 	if (winner >= 10 || winner <= -10)
 	{
-		go_to_xy(N + 2, N);
+		go_to_xy(BOARD_SIZE + 2, BOARD_SIZE);
 		cout << "player" << (winner < 0 ? 1 : 2) << " win\a";
 		Sleep(2000);
 		go_to_xy(cursor_x * 2, cursor_y);
@@ -445,38 +450,36 @@ int omok::max_value(node& state, int alpha, int beta)
 	child.value = -10000;
 	child.parent = &state;
 	child.height = child.parent->height + 1;
-	if (((double)(end_time - start_time) >= (TIME_LIMIT - 3 * CLOCKS_PER_SEC)) || (child.height >= NODE_LIMIT))
+	if ((static_cast<double>(end_time - start_time) >= (TIME_LIMIT - 3 * CLOCKS_PER_SEC)) || (child.height >= NODE_LIMIT
+	))
 	{
 		return evaluate();
 	}
-	else
+	for (int i = 1; i <= BOARD_SIZE; i++)
 	{
-		for (int i = 1; i <= N; i++)
+		for (int j = 1; j <= BOARD_SIZE; j++)
 		{
-			for (int j = 1; j <= N; j++)
+			if (game_board->map[i][j] == 0)
 			{
-				if (game_board->map[i][j] == 0)
+				game_board->map[i][j] = (count % 2) ? 1 : -1;
+				gibo[count][0] = i;
+				gibo[count][1] = j;
+				count++;
+				int temp = min_value(child, alpha, beta);
+				game_board->map[i][j] = 0;
+				gibo[count][0] = 0;
+				gibo[count][1] = 0;
+				count--;
+				if (child.value < temp)
 				{
-					game_board->map[i][j] = (count % 2) ? 1 : -1;
-					gibo[count][0] = i;
-					gibo[count][1] = j;
-					count++;
-					int temp = min_value(child, alpha, beta);
-					game_board->map[i][j] = 0;
-					gibo[count][0] = 0;
-					gibo[count][1] = 0;
-					count--;
-					if (child.value < temp)
-					{
-						child.value = temp;
-						child.position = 100 * i + j;
-					}
-					if (child.value >= beta)
-					{
-						return child.value;
-					}
-					alpha = max(alpha, child.value);
+					child.value = temp;
+					child.position = 100 * i + j;
 				}
+				if (child.value >= beta)
+				{
+					return child.value;
+				}
+				alpha = max(alpha, child.value);
 			}
 		}
 	}
@@ -500,34 +503,31 @@ int omok::min_value(node& state, int alpha, int beta)
 	{
 		return evaluate();
 	}
-	else
+	for (int i = 1; i <= BOARD_SIZE; i++)
 	{
-		for (int i = 1; i <= N; i++)
+		for (int j = 1; j <= BOARD_SIZE; j++)
 		{
-			for (int j = 1; j <= N; j++)
+			if (game_board->map[i][j] == 0)
 			{
-				if (game_board->map[i][j] == 0)
+				game_board->map[i][j] = (count % 2) ? 1 : -1;
+				gibo[count][0] = i;
+				gibo[count][1] = j;
+				count++;
+				int temp = max_value(child, alpha, beta);
+				game_board->map[i][j] = 0;
+				gibo[count][0] = 0;
+				gibo[count][1] = 0;
+				count--;
+				if (child.value > temp)
 				{
-					game_board->map[i][j] = (count % 2) ? 1 : -1;
-					gibo[count][0] = i;
-					gibo[count][1] = j;
-					count++;
-					int temp = max_value(child, alpha, beta);
-					game_board->map[i][j] = 0;
-					gibo[count][0] = 0;
-					gibo[count][1] = 0;
-					count--;
-					if (child.value > temp)
-					{
-						child.value = temp;
-						child.position = 100 * i + j;
-					}
-					if (child.value <= alpha)
-					{
-						return child.value;
-					}
-					beta = min(beta, child.value);
+					child.value = temp;
+					child.position = 100 * i + j;
 				}
+				if (child.value <= alpha)
+				{
+					return child.value;
+				}
+				beta = min(beta, child.value);
 			}
 		}
 	}
@@ -538,7 +538,7 @@ int omok::min_value(node& state, int alpha, int beta)
 void omok::timer()
 {
 	end_time = clock();
-	go_to_xy(3, N);
+	go_to_xy(3, BOARD_SIZE);
 	cout << "TIMER :";
 	cout.width(5);
 	cout << (TIME_LIMIT - (end_time - start_time)) / CLOCKS_PER_SEC << "s";
@@ -546,7 +546,7 @@ void omok::timer()
 
 	if (TIME_LIMIT < (end_time - start_time))
 	{
-		go_to_xy(3, N);
+		go_to_xy(3, BOARD_SIZE);
 		cout << "TIME OUT";
 		if (count % 2 == 1)
 		{

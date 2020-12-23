@@ -3,7 +3,7 @@
 #include <Windows.h>
 #include <time.h>
 
-#define N 19
+#define BOARD_SIZE 19
 #define TIME_LIMIT (CLOCKS_PER_SEC * 20)  // 시간 제한
 #define NODE_LIMIT 3 // 노드 제한
 
@@ -13,7 +13,7 @@ public:
 	class player* player_list[2]; // Player 2명 리스트
 	class board* game_board;
 
-	int gibo[N * N][2]; // 기보
+	int gibo[BOARD_SIZE * BOARD_SIZE][2] = {0}; // 기보
 
 	char cursor_x; // 커서x
 	char cursor_y; // 커서y
@@ -36,8 +36,8 @@ public:
 	void move();
 	void go_to_xy(int x, int y);
 	void draw_stone(int x, int y);
-	void select_player();
-	void show_player(int num);
+	void select_player_is_user(int player_num);
+	void show_player(int player_num);
 	int check_winner(int player);
 	void finish_game();
 	void timer();
