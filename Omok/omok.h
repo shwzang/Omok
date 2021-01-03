@@ -32,13 +32,11 @@ public:
 	void one_two();
 	void init();
 	void play();
-	void display();
 	void move();
 	void go_to_xy(int x, int y);
 	void draw_stone(int x, int y);
 	void select_player_is_user(int player_num);
-	void show_player(int player_num);
-	int check_winner(int player);
+	int check_winner();
 	void finish_game();
 	void timer();
 

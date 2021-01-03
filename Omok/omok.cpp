@@ -11,9 +11,6 @@
 
 using namespace std;
 
-class player;
-class board;
-
 int main()
 {
 	omok* game_instance = new omok();
@@ -42,7 +39,7 @@ void omok::init()
 	count = 1;
 
 	//전광판 그리기
-	display();
+	game_board->draw_display(count);
 
 	// 1p, 2p 사용자 또는 컴퓨터 선택
 	select_player_is_user(0);
@@ -57,8 +54,8 @@ void omok::play()
 
 	do
 	{
-		int tmp = 0;
-		display();
+		int cursor = 0;
+		game_board->draw_display(count);
 		if (player_list[(count - 1) % 2]->is_computer == false)
 		{
 			move();
@@ -68,17 +65,17 @@ void omok::play()
 			timer();
 			if (count >= 3)
 			{
-				tmp = ab_search();
+				cursor = ab_search();
 			}
-			cursor_x = tmp / 100;
-			cursor_y = tmp % 100;
+			cursor_x = cursor / 100;
+			cursor_y = cursor % 100;
 			one_two();
 
 			draw_stone(cursor_x, cursor_y);
 		} // 플레이어가 컴퓨터면 계산하기
 		if (winner == 0)
 		{
-			winner = check_winner(count % 2);
+			winner = check_winner();
 		}
 
 		go_to_xy(BOARD_SIZE + 1, BOARD_SIZE + 5);
@@ -185,7 +182,7 @@ void omok::draw_stone(int x, int y)
 void omok::select_player_is_user(int player_num)
 {
 	bool has_selected = false;
-	show_player(player_num);
+	game_board->show_player_is_user(player_list, player_num);
 	do
 	{
 		int a = _getch();
@@ -196,14 +193,14 @@ void omok::select_player_is_user(int player_num)
 			if ((a == 75) || (a == 77))
 			{
 				player_list[player_num]->is_computer = !player_list[player_num]->is_computer;
-				show_player(player_num);
+				game_board->show_player_is_user(player_list, player_num);
 			}
 		}
 
 		else if (((a == 97) || (a == 65)) || ((a == 100) || (a == 69)))
 		{
 			player_list[player_num]->is_computer = !player_list[player_num]->is_computer;
-			show_player(player_num);
+			game_board->show_player_is_user(player_list, player_num);
 		} // 입력이 ad 면
 
 		if ((a == 32) || (a == 13))
@@ -238,69 +235,31 @@ void omok::one_two()
 	go_to_xy(cursor_x * 2, cursor_y);
 }
 
-void omok::display()
-{
-	go_to_xy(BOARD_SIZE * 3 / 5, BOARD_SIZE + 1);
-	cout << (count % 2 ? "Black" : "White") << "\'s Turn";
-	go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE / 4);
-	cout << "Black○";
-
-	go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE / 2);
-	cout << "vs";
-	go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE * 3 / 4);
-	cout << "White●";
-
-	show_player(0);
-	show_player(1);
-}
-
-void omok::show_player(int player_num)
-{
-	if (player_num == 0)
-	{
-		go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE / 4 + 1);
-	}
-	else if (player_num == 1)
-	{
-		go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE * 3 / 4 + 1);
-	}
-
-	if (player_list[player_num]->is_computer == false)
-	{
-		cout.width(5);
-		cout << "User";
-	}
-	else if (player_list[player_num]->is_computer == true)
-	{
-		cout.width(5);
-		cout << "Com";
-	}
-} // 플레이어 보여주기
-
-int omok::check_winner(int player)
+int omok::check_winner()
 {
 	winner = 0;
 
 	for (int i = 0; i <= count; i++)
 	{
-		if (player == (count % 2))
+		for (int j = 0; j < 4; j++)
 		{
-			for (int j = 0; j < 4; j++)
+			char sum = 0;
+			char x = gibo[i][0];
+			char y = gibo[i][1];
+			for (int k = 0; k <= 4; k++)
 			{
-				char sum = 0;
-				char x = gibo[i][0];
-				char y = gibo[i][1];
-				for (int k = 0; k <= 4; k++)
+				if (x + (direction[j][0] * k) > BOARD_SIZE || y + (direction[j][1] * k) > BOARD_SIZE)
 				{
-					if (game_board->map[x][y] == game_board->map[x + (direction[j][0] * k)][y + (direction[j][1] * k)])
-					{
-						sum += game_board->map[x + direction[j][0] * k][y + direction[j][1] * k];
-					}
+					break;
 				}
-				if (abs(sum) == 5)
+				if (game_board->map[x][y] == game_board->map[x + (direction[j][0] * k)][y + (direction[j][1] * k)])
 				{
-					winner = sum * 200;
+					sum += game_board->map[x + direction[j][0] * k][y + direction[j][1] * k];
 				}
+			}
+			if (abs(sum) == 5)
+			{
+				winner = sum * 200;
 			}
 		}
 	}
@@ -325,7 +284,6 @@ int omok::evaluate()
 	for (int i = 1; i <= count; i++)
 	{
 		// 모든 수
-		int onestone = 0;
 		for (char j = 0; j < 4; j++)
 		{
 			int read = 0;
@@ -445,13 +403,15 @@ int omok::max_value(node& state, int alpha, int beta)
 {
 	search_end_time = clock();
 	if (search_end_time - end_time >= CLOCKS_PER_SEC)
+	{
 		timer();
+	}
+
 	node child;
 	child.value = -10000;
 	child.parent = &state;
 	child.height = child.parent->height + 1;
-	if ((static_cast<double>(end_time - start_time) >= (TIME_LIMIT - 3 * CLOCKS_PER_SEC)) || (child.height >= NODE_LIMIT
-	))
+	if (static_cast<double>(end_time - start_time) >= TIME_LIMIT - 3 * CLOCKS_PER_SEC || child.height >= NODE_LIMIT)
 	{
 		return evaluate();
 	}
