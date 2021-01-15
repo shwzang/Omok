@@ -1,12 +1,12 @@
 ﻿#include "omok.h"
 
-#include <algorithm>
 #include <conio.h>
 #include <iostream>
 
 #include "board.h"
 #include "node.h"
 #include "player.h"
+#include "stone.h"
 #include "util.h"
 
 using namespace std;
@@ -14,13 +14,12 @@ using namespace std;
 int main()
 {
 	omok* game_instance = new omok();
-	board* game_board = new board();
-	game_instance->game_board = game_board;
+	game_instance->game_board = new board();
 
 	game_instance->init(); //초기화
 	game_instance->play();
 
-	game_instance->move();
+	game_instance->move_by_key_input();
 }
 
 void omok::init()
@@ -54,28 +53,34 @@ void omok::play()
 
 	do
 	{
-		int cursor = 0;
+		stone* cursor = new stone();
 		game_board->draw_display(count);
+
+		// 플레이어가 유저면 
 		if (player_list[(count - 1) % 2]->is_computer == false)
 		{
-			move();
-		} // 플레이어가 유저면 돌 옮기기
-		else if (player_list[(count - 1) % 2]->is_computer == true)
+			move_by_key_input();
+		}
+		else
 		{
 			timer();
 			if (count >= 3)
 			{
 				cursor = ab_search();
 			}
-			cursor_x = cursor / 100;
-			cursor_y = cursor % 100;
+
+			cursor_x = cursor->x;
+			cursor_y = cursor->y;
 			one_two();
 
+
 			draw_stone(cursor_x, cursor_y);
-		} // 플레이어가 컴퓨터면 계산하기
+		}
+
+		// 플레이어가 컴퓨터면 계산하기
 		if (winner == 0)
 		{
-			winner = check_winner();
+			winner = determine_winner();
 		}
 
 		go_to_xy(BOARD_SIZE + 1, BOARD_SIZE + 5);
@@ -86,7 +91,7 @@ void omok::play()
 	finish_game();
 }
 
-void omok::move()
+void omok::move_by_key_input()
 {
 	int c = count;
 	start_time = clock();
@@ -150,6 +155,7 @@ void omok::move()
 			one_two();
 			draw_stone(cursor_x, cursor_y); // 돌 놓기
 		}
+
 		go_to_xy(cursor_x * 2, cursor_y);
 	} while ((c == count) && (winner == 0));
 }
@@ -172,9 +178,12 @@ void omok::draw_stone(int x, int y)
 	{
 		go_to_xy(BOARD_SIZE, BOARD_SIZE);
 		cout << "Already Laid\a";
-		Sleep(2000);
+
+		Sleep(1000);
+
 		go_to_xy(BOARD_SIZE, BOARD_SIZE);
 		cout << "            ";
+
 		go_to_xy(cursor_x * 2, cursor_y);
 	}
 }
@@ -235,31 +244,36 @@ void omok::one_two()
 	go_to_xy(cursor_x * 2, cursor_y);
 }
 
-int omok::check_winner()
+int omok::determine_winner()
 {
 	winner = 0;
 
 	for (int i = 0; i <= count; i++)
 	{
+		int x = gibo[i][0];
+		int y = gibo[i][1];
+
 		for (int j = 0; j < 4; j++)
 		{
 			char sum = 0;
-			char x = gibo[i][0];
-			char y = gibo[i][1];
+
 			for (int k = 0; k <= 4; k++)
 			{
 				if (x + (direction[j][0] * k) > BOARD_SIZE || y + (direction[j][1] * k) > BOARD_SIZE)
 				{
 					break;
 				}
+
 				if (game_board->map[x][y] == game_board->map[x + (direction[j][0] * k)][y + (direction[j][1] * k)])
 				{
 					sum += game_board->map[x + direction[j][0] * k][y + direction[j][1] * k];
 				}
 			}
+
 			if (abs(sum) == 5)
 			{
 				winner = sum * 200;
+				break;
 			}
 		}
 	}
@@ -272,10 +286,38 @@ void omok::finish_game()
 	{
 		go_to_xy(BOARD_SIZE + 2, BOARD_SIZE);
 		cout << "player" << (winner < 0 ? 1 : 2) << " win\a";
+
 		Sleep(2000);
+
 		go_to_xy(cursor_x * 2, cursor_y);
 	}
 }
+
+
+void omok::timer()
+{
+	end_time = clock();
+	go_to_xy(3, BOARD_SIZE);
+	cout << "TIMER :";
+	cout.width(5);
+	cout << (TIME_LIMIT - (end_time - start_time)) / CLOCKS_PER_SEC << "s";
+	go_to_xy(cursor_x * 2, cursor_y);
+
+	if (TIME_LIMIT < (end_time - start_time))
+	{
+		go_to_xy(3, BOARD_SIZE);
+		cout << "TIME OUT";
+		if (count % 2 == 1)
+		{
+			winner = -1000;
+		}
+		else if (count % 2 == 0)
+		{
+			winner = +1000;
+		}
+	}
+}
+
 
 int omok::evaluate()
 {
@@ -283,6 +325,9 @@ int omok::evaluate()
 
 	for (int i = 1; i <= count; i++)
 	{
+		int x = gibo[i][0];
+		int y = gibo[i][1];
+
 		// 모든 수
 		for (char j = 0; j < 4; j++)
 		{
@@ -296,22 +341,22 @@ int omok::evaluate()
 				char sum = 0;
 				int mid = 0;
 
-				int x = gibo[i][0];
-				int y = gibo[i][1];
-
 				for (char l = 0; l < k; l++)
 				{
-					if (game_board->map[x][y] == game_board->map[x + (direction[j][0] * l)][y + (direction[j][1] * l)])
+					if (game_board->map[x][y] == game_board->map[x + (direction[j][0] * l)][y + (direction[j][1] * l
+					)])
 					{
 						sum += game_board->map[x][y];
 					}
-					else if ((game_board->map[x + (direction[j][0] * l)][y + (direction[j][1] * l)] == 0) && (l != k - 1
+					else if ((game_board->map[x + (direction[j][0] * l)][y + (direction[j][1] * l)] == 0) && (l != k
+						- 1
 					))
 					{
 						mid++;
 					}
 				}
-				if (-1 * (game_board->map[x][y]) == game_board->map[x + (direction[j][0] * k)][y + (direction[j][1] * k)
+				if (-1 * (game_board->map[x][y]) == game_board->map[x + (direction[j][0] * k)][y + (direction[j][1]
+						* k)
 				])
 				{
 					opposite_stone_number++;
@@ -382,7 +427,7 @@ int omok::evaluate()
 	return eval;
 }
 
-int omok::ab_search()
+stone* omok::ab_search()
 {
 	node state;
 
@@ -425,15 +470,19 @@ int omok::max_value(node& state, int alpha, int beta)
 				gibo[count][0] = i;
 				gibo[count][1] = j;
 				count++;
+
 				int temp = min_value(child, alpha, beta);
+
 				game_board->map[i][j] = 0;
+
 				gibo[count][0] = 0;
 				gibo[count][1] = 0;
 				count--;
+
 				if (child.value < temp)
 				{
 					child.value = temp;
-					child.position = 100 * i + j;
+					child.position = new stone(i, j);
 				}
 				if (child.value >= beta)
 				{
@@ -473,15 +522,18 @@ int omok::min_value(node& state, int alpha, int beta)
 				gibo[count][0] = i;
 				gibo[count][1] = j;
 				count++;
+
 				int temp = max_value(child, alpha, beta);
+
 				game_board->map[i][j] = 0;
 				gibo[count][0] = 0;
 				gibo[count][1] = 0;
 				count--;
+
 				if (child.value > temp)
 				{
 					child.value = temp;
-					child.position = 100 * i + j;
+					child.position = new stone(i, j);
 				}
 				if (child.value <= alpha)
 				{
@@ -493,28 +545,4 @@ int omok::min_value(node& state, int alpha, int beta)
 	}
 	child.parent->position = child.position;
 	return child.value;
-}
-
-void omok::timer()
-{
-	end_time = clock();
-	go_to_xy(3, BOARD_SIZE);
-	cout << "TIMER :";
-	cout.width(5);
-	cout << (TIME_LIMIT - (end_time - start_time)) / CLOCKS_PER_SEC << "s";
-	go_to_xy(cursor_x * 2, cursor_y);
-
-	if (TIME_LIMIT < (end_time - start_time))
-	{
-		go_to_xy(3, BOARD_SIZE);
-		cout << "TIME OUT";
-		if (count % 2 == 1)
-		{
-			winner = -1000;
-		}
-		else if (count % 2 == 0)
-		{
-			winner = +1000;
-		}
-	}
 }

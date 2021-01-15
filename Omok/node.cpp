@@ -1,7 +1,8 @@
 ﻿#include "node.h"
+#include "stone.h"
 
 node::node()
-	: position(0)
+	: position(nullptr)
 	, value(0)
 	, height(0)
 	, parent(nullptr)

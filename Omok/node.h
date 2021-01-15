@@ -6,7 +6,7 @@ public:
 	node();
 
 public:
-	int position;
+	class stone* position;
 	int value;
 	int height;
 	node* parent;

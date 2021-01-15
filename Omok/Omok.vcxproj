@@ -151,6 +151,7 @@
     <ClCompile Include="node.cpp" />
     <ClCompile Include="omok.cpp" />
     <ClCompile Include="player.cpp" />
+    <ClCompile Include="stone.cpp" />
     <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -158,6 +159,7 @@
     <ClInclude Include="node.h" />
     <ClInclude Include="omok.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="stone.h" />
     <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
