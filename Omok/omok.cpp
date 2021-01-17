@@ -170,8 +170,7 @@ void omok::draw_stone(int x, int y)
 	if (game_board->map[x][y] == 0)
 	{
 		game_board->draw_stone(x, y, (count % 2));
-		gibo[count][0] = x;
-		gibo[count][1] = y;
+		game_record.push_back(new stone(x, y));
 		count++;
 	}
 	else
@@ -248,10 +247,10 @@ int omok::determine_winner()
 {
 	winner = 0;
 
-	for (int i = 0; i <= count; i++)
+	for (int i = 0; i < game_record.size(); i++)
 	{
-		int x = gibo[i][0];
-		int y = gibo[i][1];
+		int x = game_record.at(i)->x;
+		int y = game_record.at(i)->y;
 
 		for (int j = 0; j < 4; j++)
 		{
@@ -323,10 +322,10 @@ int omok::evaluate()
 {
 	int eval = 0;
 
-	for (int i = 1; i <= count; i++)
+	for (int i = 1; i < game_record.size(); i++)
 	{
-		int x = gibo[i][0];
-		int y = gibo[i][1];
+		int x = game_record.at(i)->x;
+		int y = game_record.at(i)->y;
 
 		// 모든 수
 		for (char j = 0; j < 4; j++)
@@ -424,6 +423,7 @@ int omok::evaluate()
 			}
 		}
 	}
+
 	return eval;
 }
 
@@ -467,16 +467,13 @@ int omok::max_value(node& state, int alpha, int beta)
 			if (game_board->map[i][j] == 0)
 			{
 				game_board->map[i][j] = (count % 2) ? 1 : -1;
-				gibo[count][0] = i;
-				gibo[count][1] = j;
+				game_record.push_back(new stone(i, j));
 				count++;
 
 				int temp = min_value(child, alpha, beta);
 
 				game_board->map[i][j] = 0;
-
-				gibo[count][0] = 0;
-				gibo[count][1] = 0;
+				game_record.pop_back();
 				count--;
 
 				if (child.value < temp)
@@ -519,15 +516,13 @@ int omok::min_value(node& state, int alpha, int beta)
 			if (game_board->map[i][j] == 0)
 			{
 				game_board->map[i][j] = (count % 2) ? 1 : -1;
-				gibo[count][0] = i;
-				gibo[count][1] = j;
+				game_record.push_back(new stone(i, j));
 				count++;
 
 				int temp = max_value(child, alpha, beta);
 
 				game_board->map[i][j] = 0;
-				gibo[count][0] = 0;
-				gibo[count][1] = 0;
+				game_record.pop_back();
 				count--;
 
 				if (child.value > temp)

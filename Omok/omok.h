@@ -16,7 +16,7 @@ public:
 	class player* player_list[2]; // Player 2명 리스트
 	class board* game_board;
 
-	int gibo[BOARD_SIZE * BOARD_SIZE][2] = {0}; // 기보
+	vector<class stone*> game_record; // 기보
 
 	char cursor_x; // 커서x
 	char cursor_y; // 커서y
