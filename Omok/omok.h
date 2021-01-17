@@ -13,9 +13,9 @@ using namespace std;
 class omok
 {
 public:
-	class player* player_list[2]; // Player 2명 리스트
 	class board* game_board;
 
+	vector<class player*> player_list; // Player 2명 리스트
 	vector<class stone*> game_record; // 기보
 
 	char cursor_x; // 커서x

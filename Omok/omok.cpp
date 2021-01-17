@@ -29,8 +29,10 @@ void omok::init()
 		game_board->init_board();
 	}
 
-	player_list[0] = new player(false);
-	player_list[1] = new player(false);
+	player* player_a = new player(false);
+	player* player_b = new player(false);
+	player_list.push_back(player_a);
+	player_list.push_back(player_b);
 
 	cursor_x = BOARD_SIZE / 2;
 	cursor_y = BOARD_SIZE / 2;

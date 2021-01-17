@@ -106,7 +106,7 @@ void board::draw_display(int count)
 	cout << "White" << white_stone;
 }
 
-void board::show_player_is_user(player** player_list, int player_num)
+void board::show_player_is_user(vector<player*> player_list, int player_num)
 {
 	if (player_num == 0)
 	{
@@ -117,12 +117,12 @@ void board::show_player_is_user(player** player_list, int player_num)
 		util::go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE * 3 / 4 + 1);
 	}
 
-	if (player_list[player_num]->is_computer == false)
+	if (player_list.at(player_num)->is_computer == false)
 	{
 		cout.width(5);
 		cout << "User";
 	}
-	else if (player_list[player_num]->is_computer == true)
+	else if (player_list.at(player_num)->is_computer == true)
 	{
 		cout.width(5);
 		cout << "Com";
