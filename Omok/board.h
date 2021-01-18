@@ -39,9 +39,12 @@ public:
 	// 전광판을 화면에 표시
 	void draw_display(int count);
 
+	// 몇번째 수인지 표시
+	void draw_count(int count);
+
 	// 플레이어의 
 	void show_player_is_user(vector<player*> player_list, int player_num);
 
 	// 해당 위치로 이동
-	void go_to_xy(int x, int y);
+	void get_board_location(int x, int y);
 };

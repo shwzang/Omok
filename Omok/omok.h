@@ -32,7 +32,6 @@ public:
 	clock_t start_time, end_time, search_end_time;
 
 public:
-	void one_two();
 	void init();
 	void play();
 	void move_by_key_input();
@@ -41,7 +40,10 @@ public:
 	void select_player_is_user(int player_num);
 	int determine_winner();
 	void finish_game();
-
+	
+	void draw_init_stones();
+	void draw_first_stone();
+	void draw_second_stone();
 
 	int evaluate();
 	int max_value(class node& state, int alpha, int beta);

@@ -63,6 +63,7 @@ void omok::play()
 		{
 			move_by_key_input();
 		}
+		// 플레이어가 컴퓨터면 계산하기
 		else
 		{
 			timer();
@@ -70,23 +71,16 @@ void omok::play()
 			{
 				cursor = ab_search();
 			}
-
 			cursor_x = cursor->x;
 			cursor_y = cursor->y;
-			one_two();
-
-
+			draw_init_stones();
+			
 			draw_stone(cursor_x, cursor_y);
 		}
 
-		// 플레이어가 컴퓨터면 계산하기
-		if (winner == 0)
-		{
-			winner = determine_winner();
-		}
+		winner = determine_winner();
 
-		go_to_xy(BOARD_SIZE + 1, BOARD_SIZE + 5);
-		cout << count;
+		game_board->draw_count(count);
 		go_to_xy(cursor_x * 2, cursor_y);
 	} while (winner == 0);
 
@@ -154,7 +148,7 @@ void omok::move_by_key_input()
 		if ((input_key == 32) || (input_key == 13))
 		{
 			go_to_xy(cursor_x * 2, cursor_y);
-			one_two();
+			draw_init_stones();
 			draw_stone(cursor_x, cursor_y); // 돌 놓기
 		}
 
@@ -221,30 +215,6 @@ void omok::select_player_is_user(int player_num)
 	} while (has_selected == false);
 }
 
-void omok::one_two()
-{
-	if (count == 1)
-	{
-		cursor_x = BOARD_SIZE / 2;
-		cursor_y = BOARD_SIZE / 2;
-	}
-	else if (count == 2)
-	{
-		if ((cursor_x > 10) || (cursor_x < 8) || (cursor_x > 10) || (cursor_x < 8))
-		{
-			cursor_x = BOARD_SIZE / 2;
-			cursor_y = BOARD_SIZE / 2;
-			srand(static_cast<unsigned>(time(nullptr)));
-			do
-			{
-				cursor_x = cursor_x + rand() % 3 - 1;
-				cursor_y = cursor_y + rand() % 3 - 1;
-			} while ((cursor_x == BOARD_SIZE / 2) && (cursor_y == BOARD_SIZE / 2));
-		}
-	}
-	go_to_xy(cursor_x * 2, cursor_y);
-}
-
 int omok::determine_winner()
 {
 	winner = 0;
@@ -291,6 +261,42 @@ void omok::finish_game()
 		Sleep(2000);
 
 		go_to_xy(cursor_x * 2, cursor_y);
+	}
+}
+
+void omok::draw_init_stones()
+{
+	if (count == 1)
+	{
+		draw_first_stone();
+	}
+	else if (count == 2)
+	{
+		draw_second_stone();
+	}
+}
+
+void omok::draw_first_stone()
+{
+	cursor_x = BOARD_SIZE / 2;
+	cursor_y = BOARD_SIZE / 2;
+
+	go_to_xy(cursor_x * 2, cursor_y);
+}
+
+void omok::draw_second_stone()
+{
+	if (cursor_x > 10 || cursor_x < 8 || cursor_y > 10|| cursor_y < 8)
+	{
+		cursor_x = BOARD_SIZE / 2;
+		cursor_y = BOARD_SIZE / 2;
+		
+		srand(static_cast<unsigned>(time(nullptr)));
+		do
+		{
+			cursor_x += rand() % 3 - 1;
+			cursor_y += rand() % 3 - 1;
+		} while (cursor_x == BOARD_SIZE / 2 && cursor_y == BOARD_SIZE / 2);
 	}
 }
 
@@ -457,7 +463,7 @@ int omok::max_value(node& state, int alpha, int beta)
 	node child;
 	child.value = -10000;
 	child.parent = &state;
-	child.height = child.parent->height + 1;
+	child.height = state.height + 1;
 	if (static_cast<double>(end_time - start_time) >= TIME_LIMIT - 3 * CLOCKS_PER_SEC || child.height >= NODE_LIMIT)
 	{
 		return evaluate();
@@ -506,7 +512,7 @@ int omok::min_value(node& state, int alpha, int beta)
 	node child;
 	child.value = 10000;
 	child.parent = &state;
-	child.height = child.parent->height + 1;
+	child.height = state.height + 1;
 	if (static_cast<double>(end_time - start_time) >= TIME_LIMIT - 3 * CLOCKS_PER_SEC || child.height >= NODE_LIMIT)
 	{
 		return evaluate();
