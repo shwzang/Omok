@@ -40,10 +40,13 @@ public:
 	void select_player_is_user(int player_num);
 	int determine_winner();
 	void finish_game();
-	
-	void draw_init_stones();
-	void draw_first_stone();
-	void draw_second_stone();
+
+	void bound_first();
+	void bound_second_bot();
+	void bound_second_player();
+
+	player* get_player(int count);
+	int get_player_num(int count);
 
 	int evaluate();
 	int max_value(class node& state, int alpha, int beta);

@@ -88,7 +88,7 @@ string board::get_board_char(int x, int y)
 
 void board::draw_stone(int x, int y, bool is_black)
 {
-	get_board_location(x, y);
+	move_to(x, y);
 	cout << setw(2) << (is_black ? black_stone : white_stone);
 	map[x][y] = is_black ? black : white;
 }
@@ -112,7 +112,7 @@ void board::draw_count(int count)
 	cout << count;
 }
 
-void board::show_player_is_user(vector<player*> player_list, int player_num)
+void board::show_player_is_user(player* in_player, int player_num)
 {
 	if (player_num == 0)
 	{
@@ -123,19 +123,19 @@ void board::show_player_is_user(vector<player*> player_list, int player_num)
 		util::go_to_xy(2 * BOARD_SIZE + 2, BOARD_SIZE * 3 / 4 + 1);
 	}
 
-	if (player_list.at(player_num)->is_computer == false)
+	if (in_player->is_computer == false)
 	{
 		cout.width(5);
 		cout << "User";
 	}
-	else if (player_list.at(player_num)->is_computer == true)
+	else if (in_player->is_computer == true)
 	{
 		cout.width(5);
 		cout << "Com";
 	}
 }
 
-void board::get_board_location(int x, int y)
+void board::move_to(int x, int y)
 {
 	util::go_to_xy(x * 2, y);
 }

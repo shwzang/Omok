@@ -42,9 +42,9 @@ public:
 	// 몇번째 수인지 표시
 	void draw_count(int count);
 
-	// 플레이어의 
-	void show_player_is_user(vector<player*> player_list, int player_num);
+	// 플레이어가 유저인지 표시
+	void show_player_is_user(player* player, int player_num);
 
 	// 해당 위치로 이동
-	void get_board_location(int x, int y);
+	void move_to(int x, int y);
 };

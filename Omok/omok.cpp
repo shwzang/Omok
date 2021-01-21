@@ -29,10 +29,10 @@ void omok::init()
 		game_board->init_board();
 	}
 
-	player* player_a = new player(false);
-	player* player_b = new player(false);
-	player_list.push_back(player_a);
-	player_list.push_back(player_b);
+	player* player_black = new player(false);
+	player* player_white = new player(false);
+	player_list.push_back(player_black);
+	player_list.push_back(player_white);
 
 	cursor_x = BOARD_SIZE / 2;
 	cursor_y = BOARD_SIZE / 2;
@@ -43,10 +43,12 @@ void omok::init()
 	game_board->draw_display(count);
 
 	// 1p, 2p 사용자 또는 컴퓨터 선택
-	select_player_is_user(0);
-	select_player_is_user(1);
+	for (int i = 0; i < player_list.size(); i++)
+	{
+		select_player_is_user(i);
+	}
 
-	go_to_xy(cursor_x * 2, cursor_y);
+	game_board->move_to(cursor_x, cursor_y);
 }
 
 void omok::play()
@@ -58,14 +60,14 @@ void omok::play()
 		stone* cursor = new stone();
 		game_board->draw_display(count);
 
-		// 플레이어가 유저면 
-		if (player_list[(count - 1) % 2]->is_computer == false)
+		// 플레이어가 유저면 입력을 받아 행동
+		if (get_player(count)->is_computer == false)
 		{
 			move_by_key_input();
 		}
-		// 플레이어가 컴퓨터면 계산하기
 		else
 		{
+			// 플레이어가 컴퓨터면 계산하기
 			timer();
 			if (count >= 3)
 			{
@@ -73,15 +75,19 @@ void omok::play()
 			}
 			cursor_x = cursor->x;
 			cursor_y = cursor->y;
-			draw_init_stones();
-			
+			bound_first();
+			bound_second_bot();
+
 			draw_stone(cursor_x, cursor_y);
 		}
 
-		winner = determine_winner();
+		if (winner == 0)
+		{
+			winner = determine_winner();
+		}
 
 		game_board->draw_count(count);
-		go_to_xy(cursor_x * 2, cursor_y);
+		game_board->move_to(cursor_x, cursor_y);
 	} while (winner == 0);
 
 	finish_game();
@@ -89,13 +95,12 @@ void omok::play()
 
 void omok::move_by_key_input()
 {
-	int c = count;
+	int old_count = count;
 	start_time = clock();
 	do
 	{
 		timer();
 		int input_key = _getch();
-		timer();
 
 		// 입력이 방향키인 경우
 		if (input_key == 224)
@@ -103,57 +108,59 @@ void omok::move_by_key_input()
 			input_key = _getch();
 
 			// 방향키 위키 입력
-			if ((input_key == 72) && (cursor_y > 0))
+			if (input_key == 72 && cursor_y > 0)
 			{
 				cursor_y--;
 			}
 				// 방향키 아래키 입력
-			else if ((input_key == 80) && (cursor_y < BOARD_SIZE - 1))
+			else if (input_key == 80 && cursor_y < BOARD_SIZE - 1)
 			{
 				cursor_y++;
 			}
 				// 방향키 왼쪽키 입력
-			else if ((input_key == 75) && (cursor_x > 0))
+			else if (input_key == 75 && cursor_x > 0)
 			{
 				cursor_x--;
 			}
 				// 방향키 오른쪽키 입력
-			else if ((input_key == 77) && (cursor_x < BOARD_SIZE - 1))
+			else if (input_key == 77 && cursor_x < BOARD_SIZE - 1)
 			{
 				cursor_x++;
 			}
 		}
 			// w 키 입력
-		else if (((input_key == 119) || (input_key == 87)) && (cursor_y > 0)) // 입력이 wasd 면
+		else if ((input_key == 119 || input_key == 87) && cursor_y > 0) // 입력이 wasd 면
 		{
 			cursor_y--;
 		}
 			// s 키 입력
-		else if (((input_key == 115) || (input_key == 83)) && (cursor_y < BOARD_SIZE - 1))
+		else if ((input_key == 115 || input_key == 83) && cursor_y < BOARD_SIZE - 1)
 		{
 			cursor_y++;
 		}
 			// a 키 입력
-		else if (((input_key == 97) || (input_key == 65)) && (cursor_x > 0))
+		else if ((input_key == 97 || input_key == 65) && cursor_x > 0)
 		{
 			cursor_x--;
 		}
 			// b 키 입력
-		else if (((input_key == 100) || (input_key == 69)) && (cursor_x < BOARD_SIZE - 1))
+		else if ((input_key == 100 || input_key == 69) && cursor_x < BOARD_SIZE - 1)
 		{
 			cursor_x++;
 		}
 
+		bound_first();
+		bound_second_player();
+		game_board->move_to(cursor_x, cursor_y);
+
 		// 입력이 스페이스바 또는 엔터면
-		if ((input_key == 32) || (input_key == 13))
+		if (input_key == 32 || input_key == 13)
 		{
-			go_to_xy(cursor_x * 2, cursor_y);
-			draw_init_stones();
 			draw_stone(cursor_x, cursor_y); // 돌 놓기
 		}
 
-		go_to_xy(cursor_x * 2, cursor_y);
-	} while ((c == count) && (winner == 0));
+		timer();
+	} while (old_count == count && winner == 0);
 }
 
 void omok::go_to_xy(int x, int y)
@@ -165,7 +172,7 @@ void omok::draw_stone(int x, int y)
 {
 	if (game_board->map[x][y] == 0)
 	{
-		game_board->draw_stone(x, y, (count % 2));
+		game_board->draw_stone(x, y, count % 2);
 		game_record.push_back(new stone(x, y));
 		count++;
 	}
@@ -179,14 +186,15 @@ void omok::draw_stone(int x, int y)
 		go_to_xy(BOARD_SIZE, BOARD_SIZE);
 		cout << "            ";
 
-		go_to_xy(cursor_x * 2, cursor_y);
+		game_board->move_to(cursor_x, cursor_y);
 	}
 }
 
 void omok::select_player_is_user(int player_num)
 {
 	bool has_selected = false;
-	game_board->show_player_is_user(player_list, player_num);
+	player* in_player = player_list.at(player_num);
+	game_board->show_player_is_user(in_player, player_num);
 	do
 	{
 		int a = _getch();
@@ -194,20 +202,20 @@ void omok::select_player_is_user(int player_num)
 		if (a == 224) // 입력이 방향키 면
 		{
 			a = _getch();
-			if ((a == 75) || (a == 77))
+			if (a == 75 || a == 77)
 			{
-				player_list[player_num]->is_computer = !player_list[player_num]->is_computer;
-				game_board->show_player_is_user(player_list, player_num);
+				in_player->is_computer = !in_player->is_computer;
+				game_board->show_player_is_user(in_player, player_num);
 			}
 		}
 
-		else if (((a == 97) || (a == 65)) || ((a == 100) || (a == 69)))
+		else if (a == 97 || a == 65 || (a == 100 || a == 69))
 		{
-			player_list[player_num]->is_computer = !player_list[player_num]->is_computer;
-			game_board->show_player_is_user(player_list, player_num);
+			in_player->is_computer = !in_player->is_computer;
+			game_board->show_player_is_user(in_player, player_num);
 		} // 입력이 ad 면
 
-		if ((a == 32) || (a == 13))
+		if (a == 32 || a == 13)
 		{
 			// 입력이 스페이스바 또는 엔터면
 			has_selected = true;
@@ -230,12 +238,12 @@ int omok::determine_winner()
 
 			for (int k = 0; k <= 4; k++)
 			{
-				if (x + (direction[j][0] * k) > BOARD_SIZE || y + (direction[j][1] * k) > BOARD_SIZE)
+				if (x + direction[j][0] * k > BOARD_SIZE || y + direction[j][1] * k > BOARD_SIZE)
 				{
 					break;
 				}
 
-				if (game_board->map[x][y] == game_board->map[x + (direction[j][0] * k)][y + (direction[j][1] * k)])
+				if (game_board->map[x][y] == game_board->map[x + direction[j][0] * k][y + direction[j][1] * k])
 				{
 					sum += game_board->map[x + direction[j][0] * k][y + direction[j][1] * k];
 				}
@@ -260,71 +268,59 @@ void omok::finish_game()
 
 		Sleep(2000);
 
-		go_to_xy(cursor_x * 2, cursor_y);
+		game_board->move_to(cursor_x, cursor_y);
 	}
 }
 
-void omok::draw_init_stones()
+void omok::bound_first()
 {
 	if (count == 1)
 	{
-		draw_first_stone();
-	}
-	else if (count == 2)
-	{
-		draw_second_stone();
-	}
-}
-
-void omok::draw_first_stone()
-{
-	cursor_x = BOARD_SIZE / 2;
-	cursor_y = BOARD_SIZE / 2;
-
-	go_to_xy(cursor_x * 2, cursor_y);
-}
-
-void omok::draw_second_stone()
-{
-	if (cursor_x > 10 || cursor_x < 8 || cursor_y > 10|| cursor_y < 8)
-	{
 		cursor_x = BOARD_SIZE / 2;
 		cursor_y = BOARD_SIZE / 2;
-		
-		srand(static_cast<unsigned>(time(nullptr)));
-		do
-		{
-			cursor_x += rand() % 3 - 1;
-			cursor_y += rand() % 3 - 1;
-		} while (cursor_x == BOARD_SIZE / 2 && cursor_y == BOARD_SIZE / 2);
 	}
 }
 
-
-void omok::timer()
+void omok::bound_second_bot()
 {
-	end_time = clock();
-	go_to_xy(3, BOARD_SIZE);
-	cout << "TIMER :";
-	cout.width(5);
-	cout << (TIME_LIMIT - (end_time - start_time)) / CLOCKS_PER_SEC << "s";
-	go_to_xy(cursor_x * 2, cursor_y);
-
-	if (TIME_LIMIT < (end_time - start_time))
+	if (count == 2)
 	{
-		go_to_xy(3, BOARD_SIZE);
-		cout << "TIME OUT";
-		if (count % 2 == 1)
+		if (cursor_x > 10 || cursor_x < 8 || cursor_y > 10 || cursor_y < 8)
 		{
-			winner = -1000;
-		}
-		else if (count % 2 == 0)
-		{
-			winner = +1000;
+			cursor_x = BOARD_SIZE / 2;
+			cursor_y = BOARD_SIZE / 2;
+
+			srand(static_cast<unsigned>(time(nullptr)));
+			do
+			{
+				cursor_x += rand() % 3 - 1;
+				cursor_y += rand() % 3 - 1;
+			} while (cursor_x == BOARD_SIZE / 2 && cursor_y == BOARD_SIZE / 2);
 		}
 	}
 }
 
+void omok::bound_second_player()
+{
+	if (count == 2)
+	{
+		cursor_x = max(cursor_x, BOARD_SIZE / 2 - 1);
+		cursor_x = min(cursor_x, BOARD_SIZE / 2 + 1);
+
+		cursor_y = max(cursor_y, BOARD_SIZE / 2 - 1);
+		cursor_y = min(cursor_y, BOARD_SIZE / 2 + 1);
+	}
+}
+
+player* omok::get_player(int count)
+{
+	return player_list.at(get_player_num(count));
+}
+
+int omok::get_player_num(int count)
+{
+	return (count - 1) % player_list.size();
+}
 
 int omok::evaluate()
 {
@@ -350,33 +346,28 @@ int omok::evaluate()
 
 				for (char l = 0; l < k; l++)
 				{
-					if (game_board->map[x][y] == game_board->map[x + (direction[j][0] * l)][y + (direction[j][1] * l
-					)])
+					if (game_board->map[x][y] == game_board->map[x + direction[j][0] * l][y + direction[j][1] * l])
 					{
 						sum += game_board->map[x][y];
 					}
-					else if ((game_board->map[x + (direction[j][0] * l)][y + (direction[j][1] * l)] == 0) && (l != k
-						- 1
-					))
+					else if (game_board->map[x + direction[j][0] * l][y + direction[j][1] * l] == 0 && l != k - 1)
 					{
 						mid++;
 					}
 				}
-				if (-1 * (game_board->map[x][y]) == game_board->map[x + (direction[j][0] * k)][y + (direction[j][1]
-						* k)
-				])
+				if (-1 * game_board->map[x][y] == game_board->map[x + direction[j][0] * k][y + direction[j][1] * k])
 				{
 					opposite_stone_number++;
 				}
-				if (-1 * (game_board->map[x][y]) == game_board->map[x - (direction[j][0])][y - (direction[j][1])])
+				if (-1 * game_board->map[x][y] == game_board->map[x - direction[j][0]][y - direction[j][1]])
 				{
 					opposite_stone_number++;
 				}
-				if (0 == game_board->map[x + (direction[j][0] * k)][y + (direction[j][1] * k)])
+				if (0 == game_board->map[x + direction[j][0] * k][y + direction[j][1] * k])
 				{
 					empty_stone_number++;
 				}
-				if (0 == game_board->map[x - (direction[j][0])][y - (direction[j][1])])
+				if (0 == game_board->map[x - direction[j][0]][y - direction[j][1]])
 				{
 					empty_stone_number++;
 				}
@@ -408,20 +399,20 @@ int omok::evaluate()
 							}
 							read++;
 						}
-						else if ((empty_stone_number == 1) && (opposite_stone_number == 1))
+						else if (empty_stone_number == 1 && opposite_stone_number == 1)
 						{
 							eval = eval + sign * (k * k + 2) / 2;
 							read++;
 						}
 					}
-					else if ((abs(sum) == k - 1) && (mid == 1))
+					else if (abs(sum) == k - 1 && mid == 1)
 					{
 						if (empty_stone_number == 2)
 						{
 							eval = eval + sign * (k - 1) * (k - 1);
 							read++;
 						}
-						else if ((empty_stone_number == 1) && (opposite_stone_number == 1))
+						else if (empty_stone_number == 1 && opposite_stone_number == 1)
 						{
 							eval = eval + sign * (k - 1) * (k - 1) / 2;
 							read++;
@@ -440,11 +431,11 @@ stone* omok::ab_search()
 	node state;
 
 	start_time = clock();
-	if ((count % 2) == 1)
+	if (get_player_num(count) == 1)
 	{
 		state.value = max_value(state, -10000, 10000);
 	}
-	else if ((count % 2) == 0)
+	else if (get_player_num(count) == 0)
 	{
 		state.value = min_value(state, -10000, 10000);
 	}
@@ -474,7 +465,7 @@ int omok::max_value(node& state, int alpha, int beta)
 		{
 			if (game_board->map[i][j] == 0)
 			{
-				game_board->map[i][j] = (count % 2) ? 1 : -1;
+				game_board->map[i][j] = count % 2 ? 1 : -1;
 				game_record.push_back(new stone(i, j));
 				count++;
 
@@ -523,7 +514,7 @@ int omok::min_value(node& state, int alpha, int beta)
 		{
 			if (game_board->map[i][j] == 0)
 			{
-				game_board->map[i][j] = (count % 2) ? 1 : -1;
+				game_board->map[i][j] = count % 2 ? 1 : -1;
 				game_record.push_back(new stone(i, j));
 				count++;
 
@@ -548,4 +539,28 @@ int omok::min_value(node& state, int alpha, int beta)
 	}
 	child.parent->position = child.position;
 	return child.value;
+}
+
+void omok::timer()
+{
+	end_time = clock();
+	go_to_xy(3, BOARD_SIZE);
+	cout << "TIMER :";
+	cout.width(5);
+	cout << (TIME_LIMIT - (end_time - start_time)) / CLOCKS_PER_SEC << "s";
+	game_board->move_to(cursor_x, cursor_y);
+
+	if (TIME_LIMIT < end_time - start_time)
+	{
+		go_to_xy(3, BOARD_SIZE);
+		cout << "TIME OUT";
+		if (get_player_num(count) == 1)
+		{
+			winner = -1000;
+		}
+		else if (get_player_num(count) == 0)
+		{
+			winner = 1000;
+		}
+	}
 }
